@@ -8,7 +8,7 @@ that's it: 'tip @user amount'.
 from datetime import datetime
 import tweepy
 from db import tweets
-from utils import is_valid_tiptweet
+from utils import is_valid_tiptweet, logger
 from twitter_api import api
 
 def main():
@@ -23,13 +23,18 @@ def main():
         tweet = mention.text
         tweet_els = tweet.split(' ')
 
+        logger.info('Reading %s', tweet)
+
         tweet_ = tweets.find_one(tweet_id=tweet_id)
+
         # If it's a valid tweet and hasn't been saved before
         if is_valid_tiptweet(tweet) and not tweet_:
             receiver_id = mention.entities['user_mentions'][1]['id']
             receiver_username = mention.entities['user_mentions'][1]['screen_name']
 
             amount = tweet_els[3]
+
+            logger.info('Saving tweet')
 
             tweets.insert(dict(
                 tweet_id=tweet_id,

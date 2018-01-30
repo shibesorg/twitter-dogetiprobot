@@ -18,7 +18,8 @@ class DogecoinConnection():
                 host=self.host,
                 port=self.port,
             )
-        except:
+        except Exception as e:
+            print(e)
             print('Error could not connect to node.')
 
     def get_balance(self, account_name):
