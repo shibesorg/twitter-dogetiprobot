@@ -15,7 +15,8 @@
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -119,5 +120,6 @@ pip-selfcheck.json
 .settings
 
 .envrc
+.env
 
 *.sqlite

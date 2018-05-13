@@ -4,7 +4,10 @@
 Go through the list of saved replies and check for accepted and tip them.
 """
 
+import time
+import pdb;
 from datetime import datetime
+from tweepy import RateLimitError
 from db import tweets, users
 from twitter_api import api
 from utils import logger
@@ -17,14 +20,20 @@ def main():
     for tweet in tweets:
         tweet_id = tweet['tweet_id']
         reply_id = tweet['reply_id']
+        search_results = []
 
-        search_results = api.search('to:dogetiprobot', since_id=tweet_id)
+        try:
+            search_results = api.search('to:dogetiprobot', since_id=tweet_id)
+        except RateLimitError:
+            time.sleep(5 * 60)
 
         for result in search_results:
                 # author_id = result.author._json['id']
                 author_username = result.author._json['screen_name']
 
-                if result.in_reply_to_status_id == reply_id and tweet['receiver_username'] == author_username:
+                if result.in_reply_to_status_id == reply_id and tweet['receiver_username'] == author_username and tweet['confirmed'] is False:
+                    logger.info('Tx is not completed, proceeding to tip')
+
                     text = result.text
 
                     parent_tweet = api.get_status(tweet_id)
@@ -33,10 +42,14 @@ def main():
                     logger.info('Reply: %s', text)
 
                     if 'accept' in text:
+                        logger.info('%s has accepted the tip', tweet['receiver_username'])
+
                         user = users.find_one(user_id=tweet['receiver_id'])
 
                         # If user does not have a dogecoin address create one.
                         if not user:
+                            logger.info('%s has not wallet, creating one', tweet['receiver_username'])
+
                             user_id = tweet['receiver_id']
                             address = dogeconn.get_newaddress(str(user_id))
                             users.insert(dict(
@@ -48,7 +61,7 @@ def main():
                             # send dogecoins
                             logger.info('Sending a Ð%s tip from %s to %s at this address %s', tweet['amount'], tweet['sender_username'], tweet['receiver_username'], address)
 
-                            dogeconn.send_from(
+                            tx = dogeconn.send_from(
                                 str(tweet['sender_id']),
                                 address,
                                 float(tweet['amount']),
@@ -62,12 +75,13 @@ def main():
                                 completed=True,
                                 accepted=True,
                                 modified_at=datetime.utcnow(),
+                                tx=tx,
                             ), ['tweet_id'])
                         else:
                             # send dogecoins
                             logger.info('Sending a %s tip from %s to %s at this address %s', tweet['amount'], tweet['sender_username'], tweet['receiver_username'], user['address'])
 
-                            dogeconn.send_from(
+                            tx = dogeconn.send_from(
                                 str(tweet['sender_id']),
                                 user['address'],
                                 float(tweet['amount']),
@@ -81,13 +95,15 @@ def main():
                                 completed=True,
                                 accepted=True,
                                 modified_at=datetime.utcnow(),
+                                tx=tx,
                             ), ['tweet_id'])
                     if 'decline' in text:
-                        logger.info('Receiver declined tip. Complete transaction.')
+                        logger.warn('Receiver declined tip. Complete transaction.')
                         tweets.update(dict(
                             tweet_id=tweet_id,
                             completed=True,
                             accepted=False,
+                            confirmed=True,
                             modified_at=datetime.utcnow(),
                         ), ['tweet_id'])
 

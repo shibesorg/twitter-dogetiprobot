@@ -25,6 +25,7 @@ def main():
 
         logger.info('Reading %s', tweet)
 
+        # Searches for the tweet in the database
         tweet_ = tweets.find_one(tweet_id=tweet_id)
 
         # If it's a valid tweet and hasn't been saved before
@@ -49,6 +50,8 @@ def main():
                 amount=amount,
                 created_at=datetime.utcnow(),
                 modified_at=datetime.utcnow(),
+                tx='',
+                confirmed=False,
             ))
 
 
