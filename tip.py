@@ -72,7 +72,6 @@ def main():
                             )
                             tweets.update(dict(
                                 tweet_id=tweet_id,
-                                completed=True,
                                 accepted=True,
                                 modified_at=datetime.utcnow(),
                                 tx=tx,
@@ -92,7 +91,6 @@ def main():
                             )
                             tweets.update(dict(
                                 tweet_id=tweet_id,
-                                completed=True,
                                 accepted=True,
                                 modified_at=datetime.utcnow(),
                                 tx=tx,
@@ -101,7 +99,6 @@ def main():
                         logger.warn('Receiver declined tip. Complete transaction.')
                         tweets.update(dict(
                             tweet_id=tweet_id,
-                            completed=True,
                             accepted=False,
                             confirmed=True,
                             modified_at=datetime.utcnow(),

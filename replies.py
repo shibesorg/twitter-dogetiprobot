@@ -74,7 +74,7 @@ def main():
                         modified_at=datetime.utcnow(),
                     ), ['tweet_id'])
                 except RateLimitError:
-                    logger.warn('Rate limit hitted, sleeping for a while.')
+                    logger.warn('Rate limit hit, sleeping for a while.')
                     time.sleep(15 * 60)
                 except TweepError as e:
                     error_code = e.message[0]['code']
